@@ -68,8 +68,8 @@ class TestView(TestCase):
         self.assertIn(post_001.title, soup.title.text)
         # 포스트의 title은 포스트영역에도 있는가
         main_area = soup.find('div', id='main-area')
-        post_area = main_area.find('div', id="post-area")
-        self.assertIn(post_001.title, post_area.text)
+        post_area = main_area.find('div', id='post-area')
+        self.assertIn(post_001.title,post_area.text)
         # 포스터 작성자가 있는가
         # 아직 작성중
         # 포스트의 내용이 있는가
