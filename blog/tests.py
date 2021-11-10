@@ -9,6 +9,8 @@ class TestView(TestCase):
         self.client = Client()
 
         self.user_james = User.objects.create_user(username='James', password='somepassword')
+        self.user_james.is_staff=True
+        self.user_james.save()
         self.user_felix = User.objects.create_user(username='Felix', password='somepassword')
 
         self.category_programming = Category.objects.create(name='programming', slug='programming')
@@ -31,13 +33,15 @@ class TestView(TestCase):
             author=self.user_felix,
             category=self.category_culture,
         )
+
         self.post_003 = Post.objects.create(
-            title='세 번째 포스트입니다.',
-            content='세 번째 포스트입니다',
+            title='Post form 만들기',
+            content='Post form 만들기',
             author=self.user_felix,
         )
         self.post_003.tags.add(self.tag_python)
         self.post_003.tags.add(self.tag_python_kor)
+
     def navbar_test(self,soup):
         # 네비게이션바가 있는가
         navbar = soup.nav  # soup에서 nav라는 태그를 가져오겠다
@@ -57,9 +61,9 @@ class TestView(TestCase):
     def category_test(self, soup):
         category = soup.find('div',id = 'categories-card')
         self.assertIn('Categories', category.text)
-        self.assertIn(f'{self.category_programming.name} ({self.category_programming.post_set.count()})', category.text)
-        self.assertIn(f'{self.category_culture.name} ({self.category_culture.post_set.count()})', category.text)
-        self.assertIn(f'미분류 (1)', category.text)
+        self.assertIn(f'{self.category_programming.name}({self.category_programming.post_set.count()})', category.text)
+        self.assertIn(f'{self.category_culture.name}({self.category_culture.post_set.count()})', category.text)
+        self.assertIn(f'미분류', category.text)
 
     def test_category_page(self):
         # 카테고리 페이지 url로 불러오기
@@ -102,7 +106,12 @@ class TestView(TestCase):
         self.client.login(username='Felix', password='somepassword')
         response = self.client.get('/blog/create_post/')
         # 정상적으로 페이지가 로드
+        self.assertNotEqual(response.status_code, 200)
+
+        self.client.login(username='James', password='somepassword')
+        response = self.client.get('/blog/create_post/')
         self.assertEqual(response.status_code, 200)
+
         # 페이지 타이틀 'Blog'
         soup = BeautifulSoup(response.content, 'html.parser')
         self.assertEqual(soup.title.text, 'Created Post - Blog')
