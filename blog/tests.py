@@ -49,7 +49,48 @@ class TestView(TestCase):
             content = '첫번째 댓글입니다',
         )
 
-    def navbar_test(self,soup):
+    def test_comment_form(self):
+        self.assertEqual(Comment.objects.count(),1)
+        self.assertEqual(self.post_001.comment.count(), 1)
+
+        # 로그인 하지 않은 상태
+        response = self.client.get(self.post_001.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        comment_area = soup.find('div', id='comment-area')
+        self.assertIn('Log in and leave a comment', comment_area.text)
+        self.assertFalse(comment_area('form', id='commnent-form'))
+
+        # 로그인 한 상태
+        self.client.login(username='Felix', password='somepassword')
+        response = self.client.get(self.post_001.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        comment_area = soup.find('div', id='comment-area')
+        self.assertNotIn('Log in and leave a comment', comment_area.text)
+        comment_form = comment_area.find('form', id='comment-form')
+        self.assertTrue(comment_form.find('textarea', id='id_content'))
+
+        response = self.client.post(
+            self.post_001.get_absolute_url() + 'new_comment/',
+            {
+                'content' : "두번째 댓글입니다"
+            },
+            follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Comment.objects.count(),2)
+        self.assertEqual(self.post_001.comment_set.count(), 2)
+
+        new_comment= Comment.objects.last()
+        soup = BeautifulSoup(response.content, 'html.parser')
+        self.assertIn(new_comment.post.title, soup.title.text)
+        comment_area = soup.find('div', id='comment-area')
+        new_comment_div = comment_area.find('div', id=f'comment-{new_comment.pk}')
+        self.assertIn('Felix', new_comment_div.text)
+        self.assertIn('두번째 댓글입니다.', new_comment_div.text)
+
+def navbar_test(self,soup):
         # 네비게이션바가 있는가
         navbar = soup.nav  # soup에서 nav라는 태그를 가져오겠다
         # 네비게이션바에 Blog, AboutMe라는 문구가 있다
@@ -136,7 +177,7 @@ class TestView(TestCase):
             })
         last_post = Post.objects.last()
         self.assertEqual(last_post.title, "Post form 만들기")
-        self.assertEqual(last_post.author.username,'felix')
+        self.assertEqual(last_post.author.username,'Felix')
         self.assertEqual(last_post.tags.count(),3)
         self.assertTrue(Tag.objects.get(name='new tag'))
         self.assertTrue(Tag.objects.get(name='한글태그'))
@@ -150,12 +191,12 @@ class TestView(TestCase):
 
         # 로그인 했지만 작성자가 아닌 경우
         self.assertNotEqual(self.post_003.author, self.user_james)
-        self.client.login(username='james', password='somepassword')
+        self.client.login(username='James', password='somepassword')
         response = self.client.get(update_url)
         self.assertEqual(response.status_code,403) #403:forbidden (접근 권한 금지)
 
         # 작성자가 로그인해서 접근한 경우
-        self.client.login(username='felix', password='somepassword')
+        self.client.login(username='Felix', password='somepassword')
         response = self.client.get(update_url)
         self.assertEqual(response.status_code, 200)
 
@@ -243,7 +284,7 @@ class TestView(TestCase):
     def test_post_detail(self):
         # 포스트 하나
         # 이 포스트의 url이 /blog/1
-        self.assertEqual(self.post_001.get_absolute_url(), '/blog/1')
+        self.assertEqual(self.post_001.get_absolute_url(), '/blog/1/')
         # url에 의해 정상적으로 상세페이지를 불러오는가
         response = self.client.get('/blog/1/')
         self.assertEqual(response.status_code, 200)
