@@ -29,6 +29,7 @@ urlpatterns = [
     path('blog/', include('blog.urls')),#   서버 IP/blog
     path('admin/', admin.site.urls),    # 서버 IP/admin
     path('', include('single_pages.urls')),
+    path('accounts/', include('allauth.urls')),
     path('markdownx/', include('markdownx.urls'))
 ]
 
