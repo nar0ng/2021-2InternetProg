@@ -23,8 +23,13 @@
             <ul class="navbar-nav ml-auto">
                 {% if user.is_authenticated %}
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
-                       aria-haspopup="true" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {% if user.socialaccount_set.all.0.get_avatar_url %}
+                        <img class="rounded-circle" width="25px" src="{{user.socialaccount_set.all.0.get_avatar_url}}" alt="">
+                        {% else %}
+                        <img class="rounded-circle" width="25px"
+                             src="https://doitdjango.com/avatar/id/427/a17550604072a43e/svg/{{user.email}}/">
+                        {% endif %}
                         {{user.username}}
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -67,7 +72,8 @@
                     </div>
                     <div class="col-md-6">
                         <a role=button" class="btn btn-outline-dark  btn-block btn-sm" href="/accounts/signup">
-                            <i class="fas fa-envelope-square"></i>&nbsp;&nbsp;Sign in with E-mail</a>
+                            <i class="fas fa-envelope-square"></i>&nbsp;&nbsp;Sign in with E-mail
+                        </a>
                     </div>
                 </div>
             </div>
